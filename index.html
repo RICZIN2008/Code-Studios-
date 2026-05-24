@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Jogo da Velha PRO</title>
+
+<style>
+body {
+  margin:0;
+  background:#0f0f0f;
+  color:#fff;
+  font-family:Arial;
+  text-align:center;
+}
+
+.screen { display:none; }
+.active { display:block; }
+
+.rooms {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  max-width:380px;
+  margin:auto;
+}
+
+.room {
+  background:#1c1c1c;
+  padding:16px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.2s;
+}
+.room:hover { background:#2a2a2a; }
+
+.board {
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  gap:6px;
+  margin:auto;
+  margin-top:20px;
+}
+
+.cell {
+  width:100px;
+  height:100px;
+  background:#1c1c1c;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:42px;
+  cursor:pointer;
+  border-radius:8px;
+}
+
+#overlay {
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  font-size:32px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Jogo da Velha PRO</h2>
+
+<!-- LOBBY -->
+<div id="lobby" class="screen active">
+  <p id="statusLobby">Salas disponíveis</p>
+
+  <div class="rooms">
+    <div class="room" onclick="join('room1')">Sala 1</div>
+    <div class="room" onclick="join('room2')">Sala 2</div>
+    <div class="room" onclick="join('room3')">Sala 3</div>
+    <div class="room" onclick="join('room4')">Sala 4</div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+  <p id="status">aguardando...</p>
+  <div class="board" id="board"></div>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay"></div>
+
+<script>
+const ws = new WebSocket("ws://localhost:3000");
+
+let room, player, turn = "X";
+let board = Array(9).fill("");
+let locked = false;
+
+function join(r) {
+  room = r;
+
+  ws.send(JSON.stringify({
+    type:"join",
+    room
+  }));
+
+  document.getElementById("lobby").classList.remove("active");
+  document.getElementById("game").classList.add("active");
+}
+
+function play(i) {
+  if (locked || board[i] || player !== turn) return;
+
+  board[i] = player;
+  turn = player === "X" ? "O" : "X";
+
+  ws.send(JSON.stringify({
+    type:"move",
+    board,
+    turn
+  }));
+
+  render();
+}
+
+function render() {
+  const el = document.getElementById("board");
+  el.innerHTML = "";
+
+  board.forEach((v,i) => {
+    const d = document.createElement("div");
+    d.className = "cell";
+    d.innerText = v;
+    d.onclick = () => play(i);
+    el.appendChild(d);
+  });
+
+  document.getElementById("status").innerText =
+    player === turn ? "SUA VEZ" : "AGUARDE";
+}
+
+function show(text) {
+  const o = document.getElementById("overlay");
+  o.style.display = "flex";
+  o.innerText = text;
+
+  setTimeout(() => o.style.display = "none", 5000);
+}
+
+ws.onmessage = (e) => {
+  const d = JSON.parse(e.data);
+
+  if (d.type === "lobby") {
+    document.getElementById("statusLobby").innerText =
+      `Jogadores na sala: ${d.players}/2`;
+  }
+
+  if (d.type === "start") {
+    turn = d.turn;
+    player = turn === "X" ? "X" : "O";
+    render();
+  }
+
+  if (d.type === "update") {
+    board = d.board;
+    turn = d.turn;
+    render();
+  }
+
+  if (d.type === "end") {
+    locked = true;
+
+    if (d.result === "draw") show("EMPATE");
+    else show(d.result === player ? "VOCÊ GANHOU" : "VOCÊ PERDEU");
+  }
+
+  if (d.type === "reset") {
+    board = Array(9).fill("");
+    locked = false;
+    render();
+  }
+};
+
+render();
+</script>
+
+</body>
+</html>

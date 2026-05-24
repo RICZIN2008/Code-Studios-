@@ -2,188 +2,504 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Jogo da Velha PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSINT CYBER DASHBOARD</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 <style>
-body {
-  margin:0;
-  background:#0f0f0f;
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Consolas,monospace;
 }
 
-.screen { display:none; }
-.active { display:block; }
-
-.rooms {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px;
-  max-width:380px;
-  margin:auto;
+body{
+background:#0a0f14;
+height:100vh;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+color:#00ff88;
 }
 
-.room {
-  background:#1c1c1c;
-  padding:16px;
-  border-radius:10px;
-  cursor:pointer;
-  transition:.2s;
-}
-.room:hover { background:#2a2a2a; }
+/* TOPO */
 
-.board {
-  display:grid;
-  grid-template-columns:repeat(3,100px);
-  gap:6px;
-  margin:auto;
-  margin-top:20px;
+.topbar{
+height:60px;
+background:#0d1117;
+border-bottom:1px solid #00ff88;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 15px;
+box-shadow:0 0 20px #00ff8840;
+flex-shrink:0;
 }
 
-.cell {
-  width:100px;
-  height:100px;
-  background:#1c1c1c;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:42px;
-  cursor:pointer;
-  border-radius:8px;
+.logo{
+font-size:20px;
+font-weight:bold;
+letter-spacing:2px;
+text-shadow:0 0 10px #00ff88;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
-#overlay {
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  font-size:32px;
-  font-weight:bold;
+/* MENU */
+
+.menu-btn{
+width:45px;
+height:45px;
+border:1px solid #00ff88;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+font-size:20px;
+background:#111927;
+transition:0.3s;
 }
+
+.menu-btn:hover{
+background:#00ff88;
+color:black;
+box-shadow:0 0 15px #00ff88;
+}
+
+/* CONTAINER */
+
+.container{
+flex:1;
+position:relative;
+overflow:hidden;
+}
+
+/* PREVIEW */
+
+.preview-side{
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+background:black;
+}
+
+.preview-header{
+height:50px;
+background:#111927;
+border-bottom:1px solid #00ff88;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 15px;
+font-size:14px;
+letter-spacing:1px;
+flex-shrink:0;
+}
+
+/* BOTÕES */
+
+.preview-actions{
+display:flex;
+gap:10px;
+}
+
+.run-btn{
+background:#111927;
+border:1px solid #00ff88;
+color:#00ff88;
+padding:8px 16px;
+border-radius:10px;
+cursor:pointer;
+transition:0.3s;
+font-size:14px;
+}
+
+.run-btn:hover{
+background:#00ff88;
+color:black;
+box-shadow:0 0 15px #00ff88;
+}
+
+/* IFRAME */
+
+iframe{
+flex:1;
+width:100%;
+border:none;
+background:white;
+}
+
+/* EDITOR */
+
+.editor-panel{
+position:absolute;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:#0a0f14;
+z-index:999;
+transition:0.3s;
+display:flex;
+flex-direction:column;
+}
+
+.editor-panel.active{
+left:0;
+}
+
+/* FECHAR */
+
+.close-btn{
+position:absolute;
+top:10px;
+right:10px;
+width:40px;
+height:40px;
+border:1px solid #00ff88;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+background:#111927;
+z-index:1000;
+transition:0.3s;
+}
+
+.close-btn:hover{
+background:#00ff88;
+color:black;
+}
+
+/* ABAS */
+
+.tabs{
+height:50px;
+display:flex;
+background:#111927;
+border-bottom:1px solid #00ff88;
+padding-right:60px;
+}
+
+.tab{
+flex:1;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+font-size:14px;
+color:#00aa66;
+border-right:1px solid #00ff88;
+transition:0.3s;
+}
+
+.tab.active{
+background:#00ff88;
+color:black;
+box-shadow:0 0 15px #00ff88 inset;
+}
+
+/* EDITORES */
+
+.editor{
+flex:1;
+display:none;
+}
+
+.editor.active{
+display:flex;
+}
+
+textarea{
+width:100%;
+height:100%;
+background:#0a0f14;
+color:#00ff88;
+border:none;
+outline:none;
+resize:none;
+padding:20px;
+font-size:15px;
+line-height:1.6;
+caret-color:#00ff88;
+}
+
+/* STATUS */
+
+.statusbar{
+height:28px;
+background:#111927;
+border-top:1px solid #00ff88;
+display:flex;
+align-items:center;
+padding:0 15px;
+font-size:12px;
+flex-shrink:0;
+}
+
+/* SCROLL */
+
+textarea::-webkit-scrollbar{
+width:8px;
+}
+
+textarea::-webkit-scrollbar-thumb{
+background:#00ff88;
+border-radius:10px;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+.topbar{
+height:55px;
+}
+
+.logo{
+font-size:15px;
+}
+
+.preview-header{
+padding:0 10px;
+font-size:12px;
+}
+
+.run-btn{
+padding:7px 12px;
+font-size:12px;
+}
+
+textarea{
+font-size:13px;
+padding:15px;
+}
+
+}
+
 </style>
 </head>
-
 <body>
 
-<h2>Jogo da Velha PRO</h2>
+<!-- TOPO -->
 
-<!-- LOBBY -->
-<div id="lobby" class="screen active">
-  <p id="statusLobby">Salas disponíveis</p>
+<div class="topbar">
 
-  <div class="rooms">
-    <div class="room" onclick="join('room1')">Sala 1</div>
-    <div class="room" onclick="join('room2')">Sala 2</div>
-    <div class="room" onclick="join('room3')">Sala 3</div>
-    <div class="room" onclick="join('room4')">Sala 4</div>
-  </div>
+<div class="logo">
+<i class="fa-solid fa-shield-halved"></i>
+OSINT CYBER DASHBOARD
 </div>
 
-<!-- GAME -->
-<div id="game" class="screen">
-  <p id="status">aguardando...</p>
-  <div class="board" id="board"></div>
+<div class="menu-btn"
+onclick="toggleEditor()">
+
+<i class="fa-solid fa-bars"></i>
+
 </div>
 
-<!-- OVERLAY -->
-<div id="overlay"></div>
+</div>
+
+<!-- CONTAINER -->
+
+<div class="container">
+
+<!-- PREVIEW -->
+
+<div class="preview-side">
+
+<div class="preview-header">
+
+<span>LIVE PREVIEW</span>
+
+<div class="preview-actions">
+
+<button class="run-btn"
+onclick="runCode()">
+
+<i class="fa-solid fa-play"></i>
+EXECUTAR
+
+</button>
+
+<button class="run-btn"
+onclick="clearCode()">
+
+<i class="fa-solid fa-trash"></i>
+LIMPAR
+
+</button>
+
+</div>
+
+</div>
+
+<iframe id="preview"></iframe>
+
+</div>
+
+<!-- EDITOR -->
+
+<div class="editor-panel"
+id="editorPanel">
+
+<div class="close-btn"
+onclick="toggleEditor()">
+
+<i class="fa-solid fa-xmark"></i>
+
+</div>
+
+<!-- ABAS -->
+
+<div class="tabs">
+
+<div class="tab active"
+onclick="showTab('html',this)">
+HTML
+</div>
+
+<div class="tab"
+onclick="showTab('css',this)">
+CSS
+</div>
+
+<div class="tab"
+onclick="showTab('js',this)">
+JS
+</div>
+
+</div>
+
+<!-- HTML -->
+
+<div class="editor active"
+id="htmlEditor">
+
+<textarea id="htmlCode"></textarea>
+
+</div>
+
+<!-- CSS -->
+
+<div class="editor"
+id="cssEditor">
+
+<textarea id="cssCode"></textarea>
+
+</div>
+
+<!-- JS -->
+
+<div class="editor"
+id="jsEditor">
+
+<textarea id="jsCode"></textarea>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- STATUS -->
+
+<div class="statusbar">
+OSINT SYSTEM ONLINE • HTML • CSS • JS
+</div>
 
 <script>
-const ws = new WebSocket("ws://localhost:3000");
 
-let room, player, turn = "X";
-let board = Array(9).fill("");
-let locked = false;
+/* MENU */
 
-function join(r) {
-  room = r;
+function toggleEditor(){
 
-  ws.send(JSON.stringify({
-    type:"join",
-    room
-  }));
+document
+.getElementById('editorPanel')
+.classList.toggle('active');
 
-  document.getElementById("lobby").classList.remove("active");
-  document.getElementById("game").classList.add("active");
 }
 
-function play(i) {
-  if (locked || board[i] || player !== turn) return;
+/* ABAS */
 
-  board[i] = player;
-  turn = player === "X" ? "O" : "X";
+function showTab(tab,el){
 
-  ws.send(JSON.stringify({
-    type:"move",
-    board,
-    turn
-  }));
+document.querySelectorAll('.editor')
+.forEach(e=>e.classList.remove('active'));
 
-  render();
+document.querySelectorAll('.tab')
+.forEach(t=>t.classList.remove('active'));
+
+document
+.getElementById(tab+'Editor')
+.classList.add('active');
+
+el.classList.add('active');
+
 }
 
-function render() {
-  const el = document.getElementById("board");
-  el.innerHTML = "";
+/* EXECUTAR */
 
-  board.forEach((v,i) => {
-    const d = document.createElement("div");
-    d.className = "cell";
-    d.innerText = v;
-    d.onclick = () => play(i);
-    el.appendChild(d);
-  });
+function runCode(){
 
-  document.getElementById("status").innerText =
-    player === turn ? "SUA VEZ" : "AGUARDE";
+const html =
+document.getElementById('htmlCode').value;
+
+const css =
+document.getElementById('cssCode').value;
+
+const js =
+document.getElementById('jsCode').value;
+
+const result = `
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+${css}
+</style>
+
+</head>
+<body>
+
+${html}
+
+<script>
+${js}
+<\/script>
+
+</body>
+</html>
+`;
+
+document
+.getElementById('preview')
+.srcdoc = result;
+
 }
 
-function show(text) {
-  const o = document.getElementById("overlay");
-  o.style.display = "flex";
-  o.innerText = text;
+/* LIMPAR */
 
-  setTimeout(() => o.style.display = "none", 5000);
+function clearCode(){
+
+document.getElementById('htmlCode').value='';
+
+document.getElementById('cssCode').value='';
+
+document.getElementById('jsCode').value='';
+
+document.getElementById('preview').srcdoc='';
+
 }
 
-ws.onmessage = (e) => {
-  const d = JSON.parse(e.data);
-
-  if (d.type === "lobby") {
-    document.getElementById("statusLobby").innerText =
-      `Jogadores na sala: ${d.players}/2`;
-  }
-
-  if (d.type === "start") {
-    turn = d.turn;
-    player = turn === "X" ? "X" : "O";
-    render();
-  }
-
-  if (d.type === "update") {
-    board = d.board;
-    turn = d.turn;
-    render();
-  }
-
-  if (d.type === "end") {
-    locked = true;
-
-    if (d.result === "draw") show("EMPATE");
-    else show(d.result === player ? "VOCÊ GANHOU" : "VOCÊ PERDEU");
-  }
-
-  if (d.type === "reset") {
-    board = Array(9).fill("");
-    locked = false;
-    render();
-  }
-};
-
-render();
 </script>
 
 </body>
